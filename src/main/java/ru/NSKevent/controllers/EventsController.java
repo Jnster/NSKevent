@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.NSKevent.models.Answer;
 import ru.NSKevent.models.Event;
 import ru.NSKevent.models.EventVisitors;
+import ru.NSKevent.repositories.EventConfirmRepo;
 import ru.NSKevent.repositories.EventRepo;
 import ru.NSKevent.repositories.EventVisitorsRepo;
 
@@ -21,6 +22,8 @@ public class EventsController {
     private EventRepo eventRepo;
     @Autowired
     private EventVisitorsRepo visitorsRepo;
+    @Autowired
+    private EventConfirmRepo confirmRepo;
 
 
     @GetMapping(URL_START + "/events")
@@ -41,11 +44,13 @@ public class EventsController {
     }
 
     @PutMapping(URL_START + "/events/{id}")
-    public Answer/*json*/ addVisitor(@PathVariable Integer id, @RequestParam String email){
+    public Answer/*json*/ addVisitor(@PathVariable Integer id, @RequestParam(name = "email") String email){
         Optional<EventVisitors> optionalEventVisitors = visitorsRepo.findByEventId(id);
         if (optionalEventVisitors.isPresent()){
             Set<String> visitors = optionalEventVisitors.get().getVisitors();
             if(visitors.contains(email)){
+                return new Answer("visitor already added", optionalEventVisitors.get().getEventId());
+            }{
                 return new Answer("visitor already added", optionalEventVisitors.get().getEventId());
             }
             else {
@@ -82,10 +87,12 @@ public class EventsController {
     @DeleteMapping(URL_START + "/events/{id}")
     public Answer deleteEventById(@PathVariable Integer id){
         eventRepo.deleteById(id);
+        visitorsRepo.deleteByEventId(id);
+        confirmRepo.deleteByEventId(id);
         return new Answer("success", id);
     }
 
-    @DeleteMapping(URL_START + "/events/{id}")
+    @DeleteMapping(URL_START + "/eventvisitor/{id}")
     public Answer deleteVisitorByEventIdAndEmail(@PathVariable Integer id, @RequestParam String email){
         Optional<EventVisitors> optionalEventVisitors = visitorsRepo.findByEventId(id);
         if (optionalEventVisitors.isPresent()) {
