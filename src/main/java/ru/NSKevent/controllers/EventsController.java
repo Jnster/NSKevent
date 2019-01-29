@@ -50,8 +50,6 @@ public class EventsController {
             Set<String> visitors = optionalEventVisitors.get().getVisitors();
             if(visitors.contains(email)){
                 return new Answer("visitor already added", optionalEventVisitors.get().getEventId());
-            }{
-                return new Answer("visitor already added", optionalEventVisitors.get().getEventId());
             }
             else {
                 visitors.add(email);
