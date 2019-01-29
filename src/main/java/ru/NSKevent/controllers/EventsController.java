@@ -40,23 +40,31 @@ public class EventsController {
         return eventRepo.getEventsByIdBetween(((page - 1) * limit) + 1, page * limit );
     }
 
-    //TODO: вернуть json
     @PutMapping(URL_START + "/events/{id}")
     public Answer/*json*/ addVisitor(@PathVariable Integer id, @RequestParam String email){
         Optional<EventVisitors> optionalEventVisitors = visitorsRepo.findByEventId(id);
         if (optionalEventVisitors.isPresent()){
-            Set<String> visitors =optionalEventVisitors.get().getVisitors();
+            Set<String> visitors = optionalEventVisitors.get().getVisitors();
             if(visitors.contains(email)){
-                //TODO: return json answer error
                 return new Answer("visitor already added", optionalEventVisitors.get().getEventId());
             }
             else {
                 visitors.add(email);
-                return new Answer("visitor added", optionalEventVisitors.get().getEventId());
+                Event event = eventRepo.findById(optionalEventVisitors.get().getEventId()).get();
+                event.setMemberCount(event.getMemberCount() + 1);
+                return new Answer("visitor added", id);
             }
         }
-        //TODO:ууужас
-        return new Answer("sorry, it is ERROR", optionalEventVisitors.get().getEventId());
+        else{
+            if(eventRepo.findById(id).isPresent()){
+                EventVisitors visitors = new EventVisitors();
+                visitors.setEventId(id);
+                visitors.getVisitors().add(email);
+                visitorsRepo.save(visitors);
+                return new Answer("visitor added",id);
+            }
+        }
+        return new Answer("event don't found", id);
     }
 
     @PostMapping(URL_START + "/events")
@@ -69,5 +77,26 @@ public class EventsController {
             eventRepo.save(freshEven);
         }
         return new Answer("Success", eventRepo.findByTitle(freshEven.getTitle()).get().getId());
+    }
+
+    @DeleteMapping(URL_START + "/events/{id}")
+    public Answer deleteEventById(@PathVariable Integer id){
+        eventRepo.deleteById(id);
+        return new Answer("success", id);
+    }
+
+    @DeleteMapping(URL_START + "/events/{id}")
+    public Answer deleteVisitorByEventIdAndEmail(@PathVariable Integer id, @RequestParam String email){
+        Optional<EventVisitors> optionalEventVisitors = visitorsRepo.findByEventId(id);
+        if (optionalEventVisitors.isPresent()) {
+            Set<String> visitorsSet = optionalEventVisitors.get().getVisitors();
+            if (!visitorsSet.contains(email)) {
+                visitorsSet.remove(email);
+                Event event = eventRepo.findById(optionalEventVisitors.get().getEventId()).get();
+                event.setMemberCount(event.getMemberCount() - 1);
+                return new Answer("success", id);
+            } else return new Answer("visitor don't found", id);
+        }
+        return new Answer("event don't found",id);
     }
 }
