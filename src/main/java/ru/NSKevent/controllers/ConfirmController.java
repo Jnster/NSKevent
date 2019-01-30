@@ -27,11 +27,12 @@ public class ConfirmController {
     @RequestMapping(URL_START + "/confirmevent/{id}")
     public String confirmEvent(@PathVariable Integer id, @RequestParam String email){
         EventConfirm eventConfirm = confirmRepo.findById(id).get();
-        if(eventRepo.findById(eventConfirm.getEventId()).get().getAuthor().equals(email)) {
+        Integer eventId = eventConfirm.getEventId();
+        if(eventRepo.findById(eventId).get().getAuthor().equals(email)) {
             if (eventConfirm.getAction() == ModelAction.DELETE) {
-                eventRepo.deleteById(id);
-                visitorsRepo.deleteByEventId(id);
-                confirmRepo.deleteByEventId(id);
+                eventRepo.deleteById(eventId);
+                visitorsRepo.deleteByEventId(eventId);
+                confirmRepo.deleteById(eventConfirm.getId());
                 return "Well done!";
             }
         }
@@ -53,7 +54,7 @@ public class ConfirmController {
         return "Something wrong";
     }
 
-    @DeleteMapping(URL_START + "confirm")
+    @DeleteMapping(URL_START + "/confirm")
     public Answer deleteAllConfirm(){
         confirmRepo.deleteAll();
         return new Answer("success",0);

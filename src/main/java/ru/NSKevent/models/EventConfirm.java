@@ -9,7 +9,7 @@ import java.sql.Date;
 @Entity
 public class EventConfirm {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private Integer eventId;
     private Date start;

@@ -8,7 +8,7 @@ import java.util.Set;
 @Table(name = "visitor")
 public class EventVisitors {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private Integer eventId;
     @ElementCollection(targetClass = String.class, fetch = FetchType.EAGER)

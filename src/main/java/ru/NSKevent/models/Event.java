@@ -6,7 +6,8 @@ import javax.persistence.*;
 @Table(name = "evnt")
 public class Event {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    //TODO: id по порядку без вмешательств
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     private String title;
     private String message;
