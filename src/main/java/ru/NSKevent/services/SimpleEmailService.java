@@ -11,7 +11,7 @@ import ru.NSKevent.repositories.EventRepo;
 
 @Service
 public class SimpleEmailService {
-    private final String SUBJECT = "Подтверждение регистрации"; //+ события/участника
+    private final String SUBJECT = "Подтверждение действия над "; //+ события/участника
     private final String username = "NSKevent@yandex.ru";
     private final String password = "Tishka1";
     private final String host = "localhost:8081";
@@ -28,7 +28,15 @@ public class SimpleEmailService {
      * @param id Индентификатор подтверждения
      */
     public void sendSimpleEmailEventConfirm(String to, Integer id) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        emailSender = MailConfig.getSslYandexSender(username, password);
 
+        message.setTo(to);
+        message.setFrom(username);
+        message.setSubject(SUBJECT + "событием.");
+        message.setText(createConfirmEventMessage(to,id));
+
+        this.emailSender.send(message);
     }
 
     private String createConfirmEventMessage(String to, Integer id){
@@ -45,7 +53,7 @@ public class SimpleEmailService {
 
         message.setTo(to);
         message.setFrom(username);
-        message.setSubject(SUBJECT + "события.");
+        message.setSubject(SUBJECT + "посетителем.");
         message.setText(createConfirmVisitorMessage(to,id));
 
         this.emailSender.send(message);

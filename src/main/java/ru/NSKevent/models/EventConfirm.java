@@ -14,6 +14,7 @@ public class EventConfirm {
     private Integer eventId;
     private Date start;
     private Date finish;
+    private String email;
     private ModelAction action;
 
     public EventConfirm() {
@@ -56,6 +57,14 @@ public class EventConfirm {
 
     public void setFinish(Date finish) {
         this.finish = finish;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public ModelAction getAction() {

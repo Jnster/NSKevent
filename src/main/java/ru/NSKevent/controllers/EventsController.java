@@ -93,6 +93,7 @@ public class EventsController {
                 EventConfirm eventConfirm = new EventConfirm();
                 eventConfirm.setAction(ModelAction.DELETE);
                 eventConfirm.setEventId(id);
+                eventConfirm.setEmail(email);
                 Date date = new Date(System.currentTimeMillis());
                 eventConfirm.setStart(date);
                 eventConfirm.setFinish(new Date(date.getTime() + DAY_MILLIS));
