@@ -10,7 +10,7 @@ import java.sql.Date;
 public class EventConfirm {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private String id;
+    private Integer id;
     private Integer eventId;
     private Date start;
     private Date finish;
@@ -26,12 +26,12 @@ public class EventConfirm {
         this.action = action;
     }
 
-    public String getId() {
-        return id;
+    public void setId(Integer id) {
+        this.id = id;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public Integer getId() {
+        return id;
     }
 
     public Integer getEventId() {

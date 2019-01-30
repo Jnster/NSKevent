@@ -2,21 +2,23 @@ package ru.NSKevent.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.NSKevent.models.Answer;
-import ru.NSKevent.models.Event;
-import ru.NSKevent.models.EventVisitors;
+import ru.NSKevent.models.*;
 import ru.NSKevent.repositories.EventConfirmRepo;
 import ru.NSKevent.repositories.EventRepo;
 import ru.NSKevent.repositories.EventVisitorsRepo;
+import ru.NSKevent.services.SimpleEmailService;
 
+import java.sql.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+@CrossOrigin
 @RestController
 public class EventsController {
 
     private final String URL_START = "/api/v001";
+    private final long DAY_MILLIS = 86_400_000;
 
     @Autowired
     private EventRepo eventRepo;
@@ -35,7 +37,6 @@ public class EventsController {
     public Event getEventById(@PathVariable(name = "id") Integer id){
         Optional<Event> result = eventRepo.findById(id);
         return result.orElseGet(Event::new);
-            //TODO: else return JSON {answer:"..."}
     }
 
     @GetMapping(URL_START + "/eventpage")
@@ -44,7 +45,7 @@ public class EventsController {
     }
 
     @PutMapping(URL_START + "/events/{id}")
-    public Answer/*json*/ addVisitor(@PathVariable Integer id, @RequestParam(name = "email") String email){
+    public Answer addVisitor(@PathVariable Integer id, @RequestParam(name = "email") String email){
         Optional<EventVisitors> optionalEventVisitors = visitorsRepo.findByEventId(id);
         if (optionalEventVisitors.isPresent()){
             Set<String> visitors = optionalEventVisitors.get().getVisitors();
@@ -55,9 +56,10 @@ public class EventsController {
                 visitors.add(email);
                 Event event = eventRepo.findById(optionalEventVisitors.get().getEventId()).get();
                 event.setMemberCount(event.getMemberCount() + 1);
+                eventRepo.save(event);
                 return new Answer("visitor added", id);
             }
-        }
+}
         else{
             if(eventRepo.findById(id).isPresent()){
                 EventVisitors visitors = new EventVisitors();
@@ -83,25 +85,52 @@ public class EventsController {
     }
 
     @DeleteMapping(URL_START + "/events/{id}")
-    public Answer deleteEventById(@PathVariable Integer id){
-        eventRepo.deleteById(id);
-        visitorsRepo.deleteByEventId(id);
-        confirmRepo.deleteByEventId(id);
+    public Answer deleteEventById(@PathVariable Integer id, @RequestParam(name = "email") String email){
+        Optional<Event> optionalEvent = eventRepo.findById(id);
+        if(optionalEvent.isPresent()) {
+            Event event = optionalEvent.get();
+            if(event.getAuthor().equals(email)) {
+                EventConfirm eventConfirm = new EventConfirm();
+                eventConfirm.setAction(ModelAction.DELETE);
+                eventConfirm.setEventId(id);
+                Date date = new Date(System.currentTimeMillis());
+                eventConfirm.setStart(date);
+                eventConfirm.setFinish(new Date(date.getTime() + DAY_MILLIS));
+                confirmRepo.save(eventConfirm);
+                new SimpleEmailService().sendSimpleEmailEventConfirm(email,confirmRepo.findByEventId(event.getId()).get().getId());
+            }
+        }
         return new Answer("success", id);
     }
 
     @DeleteMapping(URL_START + "/eventvisitor/{id}")
     public Answer deleteVisitorByEventIdAndEmail(@PathVariable Integer id, @RequestParam String email){
-        Optional<EventVisitors> optionalEventVisitors = visitorsRepo.findByEventId(id);
+        Optional<EventVisitors> optionalEventVisitors = visitorsRepo.getByEventId(id);
         if (optionalEventVisitors.isPresent()) {
-            Set<String> visitorsSet = optionalEventVisitors.get().getVisitors();
-            if (!visitorsSet.contains(email)) {
+            EventVisitors eventVisitors = optionalEventVisitors.get();
+            Set<String> visitorsSet = eventVisitors.getVisitors();
+            if (visitorsSet.contains(email)) {
+                //TODO: VisitorConfirm? Создать его, запомнить и отправить имеил
                 visitorsSet.remove(email);
+                eventVisitors.setVisitors(visitorsSet);
+                visitorsRepo.save(eventVisitors);
                 Event event = eventRepo.findById(optionalEventVisitors.get().getEventId()).get();
                 event.setMemberCount(event.getMemberCount() - 1);
+                eventRepo.save(event);
+
                 return new Answer("success", id);
             } else return new Answer("visitor don't found", id);
         }
         return new Answer("event don't found",id);
+    }
+
+    @GetMapping(URL_START + "/confirm")
+    public List<EventConfirm> getEventConfirmAll(){
+        return confirmRepo.findAll();
+    }
+
+    @GetMapping(URL_START + "/visitors")
+    public List<EventVisitors> getEventVisitorsAll(){
+        return visitorsRepo.findAll();
     }
 }
