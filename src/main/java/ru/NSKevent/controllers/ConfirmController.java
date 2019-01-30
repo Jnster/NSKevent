@@ -2,6 +2,7 @@ package ru.NSKevent.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import ru.NSKevent.models.Answer;
 import ru.NSKevent.models.Event;
 import ru.NSKevent.models.EventConfirm;
 import ru.NSKevent.models.ModelAction;
@@ -50,5 +51,11 @@ public class ConfirmController {
             }
         }
         return "Something wrong";
+    }
+
+    @DeleteMapping(URL_START + "confirm")
+    public Answer deleteAllConfirm(){
+        confirmRepo.deleteAll();
+        return new Answer("success",0);
     }
 }
